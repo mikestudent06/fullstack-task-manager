@@ -1,6 +1,27 @@
-// auth/guards/jwt.guard.ts
 import { AuthGuard } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {}
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  canActivate(context: ExecutionContext) {
+    return super.canActivate(context);
+  }
+
+  handleRequest(err: any, user: any, info: any) {
+    console.log('user', user);
+    if (err || !user) {
+      if (info?.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Token has expired');
+      }
+      if (info?.name === 'JsonWebTokenError') {
+        throw new UnauthorizedException('Invalid token');
+      }
+      throw new UnauthorizedException('Authentication failed');
+    }
+    return user;
+  }
+}

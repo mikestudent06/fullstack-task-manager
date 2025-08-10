@@ -8,11 +8,19 @@ datasource db {
 }
 
 model User {
-  id             String   @id @default(uuid())
-  email          String   @unique
-  password       String
-  name           String
-  refreshToken   String?  // For storing hashed refresh token
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  name         String
+  refreshToken String?  // For storing hashed refresh token
+  isActive     Boolean  @default(true) // For soft deletion/deactivation
+  lastLoginAt  DateTime? // Track last login
+  otp          String?  
+  otpExpires   DateTime?
+  isVerified   Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
 }
