@@ -2,7 +2,10 @@ import { Response } from 'express';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-export function setRefreshTokenCookie(res: Response, refreshToken: string): void {
+export function setRefreshTokenCookie(
+  res: Response,
+  refreshToken: string,
+): void {
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true,
     secure: isProduction, // Only secure in production
