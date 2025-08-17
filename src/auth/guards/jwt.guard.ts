@@ -8,7 +8,8 @@ import {
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
-    return super.canActivate(context);
+    const canProceed = super.canActivate(context);
+    return canProceed;
   }
 
   handleRequest(err: any, user: any, info: any) {

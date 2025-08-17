@@ -17,6 +17,8 @@ import {
   UserPayload,
   VerifyOtpDto,
   ResendOtpDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
 } from './auth.dto';
 import { Response, Request } from 'express';
 import { JwtAuthGuard } from './guards/jwt.guard';
@@ -36,10 +38,7 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  async register(
-    @Body() dto: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<{ message: string }> {
+  async register(@Body() dto: RegisterDto): Promise<{ message: string }> {
     this.logger.log(`Registration request for email: ${dto.email}`);
 
     await this.authService.register(dto);
@@ -99,6 +98,7 @@ export class AuthController {
 
     return { message: 'Logged out successfully' };
   }
+
   @UseGuards(JwtAuthGuard)
   @Post('deactivate')
   @HttpCode(HttpStatus.OK)
@@ -133,17 +133,45 @@ export class AuthController {
     };
   }
 
-   @Post('resend-otp')
+  @Post('resend-otp')
   @HttpCode(HttpStatus.OK)
-  async resendOtp(
-    @Body() dto: ResendOtpDto,
-  ): Promise<{ message: string }> {
+  async resendOtp(@Body() dto: ResendOtpDto): Promise<{ message: string }> {
     this.logger.log(`Resend OTP request for email: ${dto.email}`);
-    
+
     await this.authService.resendOtp(dto.email);
-    
+
     return {
       message: 'OTP sent successfully. Please check your email.',
+    };
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(
+    @Body() dto: ForgotPasswordDto,
+  ): Promise<{ message: string }> {
+    this.logger.log(`Forgot password request for email: ${dto.email}`);
+
+    await this.authService.forgotPassword(dto.email);
+
+    return {
+      message:
+        'If your email is registered, you will receive a password reset link.',
+    };
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body() dto: ResetPasswordDto,
+  ): Promise<{ message: string }> {
+    this.logger.log(`Password reset attempt`);
+
+    await this.authService.resetPassword(dto.resetToken, dto.newPassword);
+
+    return {
+      message:
+        'Password reset successful. Please login with your new password.',
     };
   }
 }

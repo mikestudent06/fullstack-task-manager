@@ -21,8 +21,15 @@ export class MailService {
     });
   }
 
-  private async loadTemplate(templateName: string, variables: object): Promise<string> {
-    const templatePath = path.resolve(__dirname, 'templates', `${templateName}.hbs`);
+  private async loadTemplate(
+    templateName: string,
+    variables: object,
+  ): Promise<string> {
+    const templatePath = path.resolve(
+      __dirname,
+      'templates',
+      `${templateName}.hbs`,
+    );
     const templateSource = await fs.readFile(templatePath, 'utf8');
     const template = handlebars.compile(templateSource);
     return template(variables);
@@ -32,12 +39,30 @@ export class MailService {
     const html = await this.loadTemplate('otp', { otp });
 
     await this.transporter.sendMail({
-      from: `"No Reply" <${process.env.EMAIL_FROM}>`, 
+      from: `"No Reply" <${process.env.EMAIL_FROM}>`,
       to,
       subject: 'Your OTP Code',
       html,
     });
 
     this.logger.log(`OTP email sent to ${to}`);
+  }
+
+  async sendPasswordResetEmail(to: string, resetToken: string): Promise<void> {
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+    const html = await this.loadTemplate('password-reset', {
+      resetUrl,
+      resetToken,
+    });
+
+    await this.transporter.sendMail({
+      from: `"No Reply" <${process.env.EMAIL_FROM}>`,
+      to,
+      subject: 'Password Reset Request',
+      html,
+    });
+
+    this.logger.log(`Password reset email sent to ${to}`);
   }
 }

@@ -260,6 +260,75 @@ export class AuthService {
     this.logger.log(`Account deactivated: ${userId}`);
   }
 
+  async forgotPassword(email: string): Promise<void> {
+    this.logger.log(`Forgot password request for email: ${email}`);
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (!user) {
+      // Security: Don't reveal if email exists
+      this.logger.warn(
+        `Forgot password request for non-existent email: ${email}`,
+      );
+      return; // Always return success to prevent email enumeration
+    }
+
+    if (!user.isVerified) {
+      this.logger.warn(`Forgot password for unverified user: ${email}`);
+      throw new ForbiddenException('Please verify your email first');
+    }
+
+    const resetToken = generateOtp(32); // 32-character secure token
+    const resetTokenExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetToken,
+        resetTokenExpires,
+      },
+    });
+
+    await this.mailService.sendPasswordResetEmail(user.email, resetToken);
+    this.logger.log(`Password reset email sent: ${user.email}`);
+  }
+
+  async resetPassword(resetToken: string, newPassword: string): Promise<void> {
+    this.logger.log(
+      `Password reset attempt with token: ${resetToken.substring(0, 8)}...`,
+    );
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        resetToken,
+        resetTokenExpires: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      this.logger.warn(
+        `Invalid or expired reset token: ${resetToken.substring(0, 8)}...`,
+      );
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpires: null,
+        refreshToken: null, // Force re-login everywhere
+      },
+    });
+
+    this.logger.log(`Password reset successful for user: ${user.email}`);
+  }
+
   private async generateTokens(
     userId: string,
     email: string,
