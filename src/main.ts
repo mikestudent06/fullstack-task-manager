@@ -8,7 +8,8 @@ async function bootstrap() {
   app.use(cookieParser());
   // Optional CORS config if frontend on different domain
   app.enableCors({
-    origin: 'http://localhost:5173', // your frontend URL
+    origin: 'https://task-manager-front-psi.vercel.app', // your frontend URL
+    // origin: 'http://localhost:5173', // your frontend URL
     credentials: true, // allow cookies to be sent
   });
   // app.useGlobalPipes(
