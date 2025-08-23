@@ -8,7 +8,7 @@ import {
   IsUUID,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { TaskStatus, Priority } from '@prisma/client';
+import {  Priority } from '@prisma/client';
 
 export class CreateTaskDto {
   @IsNotEmpty()
